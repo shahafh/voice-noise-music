@@ -1,4 +1,4 @@
-function vnm_classify_dbg()
+function vnm_main()
 	alg=vnm_classify_cfg();
 
 %	alg=rmfield(alg,'matlabpool');
