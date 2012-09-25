@@ -88,37 +88,35 @@ classdef lib_svm
 			%   For descreeption of OBJ, DATA and DATA_CLASSES variables see LIB_SVM/TRAIN
 			%   function description.
 			%   Next optional arguments are supported:
-			%   TRAIN_BEST(..., 'fold',FOLD_NUMBER) - use FOLD_NUMBER-fold
+			%   FIND_COST_GAMMA(..., 'autoscale',AUTOSCALE_FLAG) - if AUTOSCALE_FLAG is set, than
+			%     before training the data is automaticaly scaled to zeros mean and unary variance.
+			%   FIND_COST_GAMMA(..., 'fold',FOLD_NUMBER) - use FOLD_NUMBER-fold
 			%     cross-validation to estimate best COST and GAMMA parameters. By
 			%     default 10-fold cross-validation performed.
-			%   TRAIN_BEST(..., 'cost', COST_TEST) - set the list of COST parameters to
+			%   FIND_COST_GAMMA(..., 'cost', COST_TEST) - set the list of COST parameters to
 			%     be checked to find best COST-GAMMA combination. By default
 			%     COST_TEST=pow2(-5:2:15).
-			%   TRAIN_BEST(..., 'gamma', GAMMA_TEST) - set the list of GAMMA parameters
+			%   FIND_COST_GAMMA(..., 'gamma', GAMMA_TEST) - set the list of GAMMA parameters
 			%     to be checked to find best COST-GAMMA combination. By default to
 			%     GAMMA_TEST=pow2(-15:2:3).
-			%   TRAIN_BEST(..., 'opt_arg', LIBSVM_OPT_ARG) - set the optional libsvm
+			%   FIND_COST_GAMMA(..., 'opt_arg', LIBSVM_OPT_ARG) - set the optional libsvm
 			%     argurments passed directly to libsvmtrain function.
 			%
 			%
 			%   See also LIB_SVM/TRAIN LIB_SVM/RATE_PREDICTION LIB_SVM/CLASSIFY
 
-			obj=lib_svm;
-
-			[cl_ind, ~, obj.classes]=grp2idx(data_classes);
-			
-			obj.data_scale.shift=-mean(data);
-			obj.data_scale.factor=1./std(data);
-
-			data = ( data+repmat(obj.data_scale.shift,size(data,1),1) ) .* repmat(obj.data_scale.factor,size(data,1),1);
+			[cl_ind, ~, obj_classes]=grp2idx(data_classes);
 
 			opt_arg=' -h 0 -q';
 			fold = 10;
 			cost=pow2(-5:2:15);
 			gamma=pow2(-15:2:3);
+			autoscale=true;
 			for i=1:2:length(varargin)
 				if isa(varargin{i},'char')
 					switch lower(varargin{i})
+						case 'autoscale'
+							autoscale=varargin{i+1};
 						case 'fold'
 							fold=varargin{i+1};
 						case 'cost'
@@ -129,6 +127,13 @@ classdef lib_svm
 							opt_arg=varargin{i+1};
 					end
 				end
+			end
+
+			if autoscale
+				shift=-mean(data);
+				factor=1./std(data);
+
+				data = ( data+repmat(shift,size(data,1),1) ) .* repmat(factor,size(data,1),1);
 			end
 
 			% make cost-gamma all combinations
@@ -147,6 +152,8 @@ classdef lib_svm
 				cmd = ['-v ',num2str(fold),' -c ',num2str(cost(i)),' -g ',num2str(gamma(i)), ' ' opt_arg];
 				predict{i} = libsvmtrain(cl_ind, data, cmd);
 			end
+
+			predict = cellfun(@(x) obj_classes(x), predict, 'UniformOutput',false);
 		end
 		
 		function [accuracy, average_recall, asymm_est_cur, conf_mat, order, conf_mat_norm]=rate_prediction(g,ghat,varargin)
