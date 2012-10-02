@@ -227,5 +227,5 @@
 			struct('target',{{'cl_fear' 'cl_sadness'}},		'path','c:\EmoWork\vnm_berlin_wks_fear_vs_sadness.mat',		'rate',0.97071);
 			struct('target',{{'cl_happiness' 'cl_sadness'}},'path','c:\EmoWork\vnm_berlin_wks_happiness_vs_sadness.mat',	'rate',0.98387)]);
 %}
-	alg.matlabpool={'emo'};
+	alg.matlabpool={'local'};
 end
