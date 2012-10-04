@@ -116,18 +116,6 @@
 														'cv_steps',	1));
 
 
-	%% Classification configuration
-% 	cl_classes=vnm_classify_cfg_age();
-%	cl_classes=vnm_classify_cfg_gender(cl_classes);
-%	cl_classes=vnm_classify_cfg_berlin(cl_classes);
-%	cl_classes=vnm_classify_cfg_actors_st(cl_classes);
-% 	cl_classes=vnm_classify_cfg_savee(cl_classes);
-% 	cl_classes=vnm_classify_cfg_enterface(cl_classes);
-% 	cl_classes=vnm_classify_cfg_avecdb(cl_classes);
-% 	cl_classes=vnm_classify_cfg_te_corpus(cl_classes);
-%	cl_classes=vnm_classify_cfg_telecom(cl_classes);
-
-
 	%% Classifiers configuration
 %	alg.classifier.proc=	struct(	'K_fold',1, 'train_part',1, 'test_part',1, 'classes',cl_classes, 'save_path','./');
 %	alg.classifier.proc=	struct('type',{{'K-fold' 'Random subsampling'}}, 'folds',20, 'train_part',0.7, 'classes',cl_classes, 'save_path','c:\EmoWork\'); % 'test_part',0.5
@@ -138,44 +126,14 @@
 
 %	alg.classifier.wks_libsvm = struct(	'train_set_balance',false,  'libsvm_opt_arg', libsvm_opt_arg);
 
-%	alg.classifier.hks_ova=struct('classifiers', [
-%			struct('target','cl_anger',			'path','c:\EmoWork\vnm_berlin_wks_is_anger.mat',		'rate',0.90575);
-%			struct('target','cl_sadness',		'path','c:\EmoWork\vnm_berlin_wks_is_sadness.mat',		'rate',0.88093);
-%			struct('target','cl_boredom',		'path','c:\EmoWork\vnm_berlin_wks_is_boredom.mat',		'rate',0.85717);
-%			struct('target','cl_neutral',		'path','c:\EmoWork\vnm_berlin_wks_is_neutral.mat',		'rate',0.85657);
-%			struct('target','cl_happiness',		'path','c:\EmoWork\vnm_berlin_wks_is_happiness.mat',	'rate',0.82397);
-%			struct('target','disgust_vs_fear',	'path','c:\EmoWork\vnm_berlin_wks_disgust_vs_fear.mat',	'rate',0.94565)]);
-%{
-	alg.classifier.hks_ova_ovo=struct('cl_ova', [
-			struct('target','cl_boredom',		'path','c:\EmoWork\vnm_berlin_wks_is_boredom.mat',		'rate',0.85717);
-			struct('target','cl_happiness',		'path','c:\EmoWork\vnm_berlin_wks_is_happiness.mat',		'rate',0.82397);
-			struct('target','cl_disgust',		'path','c:\EmoWork\vnm_berlin_wks_is_disgust.mat',		'rate',0.81191);
-			struct('target','cl_fear',			'path','c:\EmoWork\vnm_berlin_wks_is_fear.mat',			'rate',0.80934);
-			struct('target','cl_neutral',		'path','c:\EmoWork\vnm_berlin_wks_is_neutral.mat',		'rate',0.85657);
-			struct('target','cl_anger',			'path','c:\EmoWork\vnm_berlin_wks_is_anger.mat',			'rate',0.90575);
-			struct('target','cl_sadness',		'path','c:\EmoWork\vnm_berlin_wks_is_sadness.mat',		'rate',0.88093)], ...
-		'cl_ovo',[
-			struct('target',{{'cl_neutral' 'cl_anger'}},	'path','c:\EmoWork\vnm_berlin_wks_neutral_vs_anger.mat',		'rate',0.99425);
-			struct('target',{{'cl_neutral' 'cl_boredom'}},	'path','c:\EmoWork\vnm_berlin_wks_neutral_vs_boredom.mat',	'rate',0.89869);
-			struct('target',{{'cl_neutral' 'cl_disgust'}},	'path','c:\EmoWork\vnm_berlin_wks_neutral_vs_disgust.mat',	'rate',0.93362);
-			struct('target',{{'cl_neutral' 'cl_fear'}},		'path','c:\EmoWork\vnm_berlin_wks_neutral_vs_fear.mat',		'rate',0.95455);
-			struct('target',{{'cl_neutral' 'cl_happiness'}},'path','c:\EmoWork\vnm_berlin_wks_neutral_vs_happiness.mat',	'rate',0.98837);
-			struct('target',{{'cl_neutral' 'cl_sadness'}},	'path','c:\EmoWork\vnm_berlin_wks_neutral_vs_sadness.mat',	'rate',0.88441);
-			struct('target',{{'cl_anger' 'cl_boredom'}},	'path','c:\EmoWork\vnm_berlin_wks_anger_vs_boredom.mat',		'rate',1);
-			struct('target',{{'cl_anger' 'cl_disgust'}},	'path','c:\EmoWork\vnm_berlin_wks_anger_vs_disgust.mat',		'rate',0.93269);
-			struct('target',{{'cl_anger' 'cl_fear'}},		'path','c:\EmoWork\vnm_berlin_wks_anger_vs_fear.mat',			'rate',0.91081);
-			struct('target',{{'cl_anger' 'cl_happiness'}},	'path','c:\EmoWork\vnm_berlin_wks_anger_vs_happiness.mat',	'rate',0.8022);
-			struct('target',{{'cl_anger' 'cl_sadness'}},	'path','c:\EmoWork\vnm_berlin_wks_anger_vs_sadness.mat',		'rate',0.99479);
-			struct('target',{{'cl_boredom' 'cl_disgust'}},	'path','c:\EmoWork\vnm_berlin_wks_boredom_vs_disgust.mat',	'rate',0.93516);
-			struct('target',{{'cl_boredom' 'cl_fear'}},		'path','c:\EmoWork\vnm_berlin_wks_boredom_vs_fear.mat',		'rate',1);
-			struct('target',{{'cl_boredom' 'cl_happiness'}},'path','c:\EmoWork\vnm_berlin_wks_boredom_vs_happiness.mat',	'rate',0.98571);
-			struct('target',{{'cl_boredom' 'cl_sadness'}},	'path','c:\EmoWork\vnm_berlin_wks_boredom_vs_sadness.mat',	'rate',0.90548);
-			struct('target',{{'cl_disgust' 'cl_fear'}},		'path','c:\EmoWork\vnm_berlin_wks_disgust_vs_fear.mat',		'rate',0.94565);
-			struct('target',{{'cl_disgust' 'cl_happiness'}},'path','c:\EmoWork\vnm_berlin_wks_disgust_vs_happiness.mat',	'rate',0.95833);
-			struct('target',{{'cl_disgust' 'cl_sadness'}},	'path','c:\EmoWork\vnm_berlin_wks_disgust_vs_sadness.mat',	'rate',0.95262);
-			struct('target',{{'cl_fear' 'cl_happiness'}},	'path','c:\EmoWork\vnm_berlin_wks_fear_vs_happiness.mat',		'rate',0.90114);
-			struct('target',{{'cl_fear' 'cl_sadness'}},		'path','c:\EmoWork\vnm_berlin_wks_fear_vs_sadness.mat',		'rate',0.97071);
-			struct('target',{{'cl_happiness' 'cl_sadness'}},'path','c:\EmoWork\vnm_berlin_wks_happiness_vs_sadness.mat',	'rate',0.98387)]);
-%}
-%	alg.matlabpool={'local'};
+	alg.matlabpool={'local'};
+
+	if not(isfield(alg,'matlabpool')) || strcmp(alg.matlabpool{1},'local')
+		local_jm=findResource('scheduler','type','local');
+		if local_jm.ClusterSize>1
+			alg.matlabpool={'local'};
+		else
+			alg.matlabpool={};
+		end
+	end
 end

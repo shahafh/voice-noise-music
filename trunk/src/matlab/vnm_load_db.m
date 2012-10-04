@@ -42,7 +42,8 @@ function base=vnm_load_db(db_path, db_type, alg)
 
 	if not(cache.obs.is_loaded)
 		disp('CACHE: raw observations is wrong or not exists. Recalculation ...');
-		if isfield(alg,'matlabpool')
+		usepool = isfield(alg,'matlabpool') && not(isempty(alg.matlabpool));
+		if usepool
 			if matlabpool('size')>0
 				matlabpool('close');
 			end
@@ -56,7 +57,7 @@ function base=vnm_load_db(db_path, db_type, alg)
 			dos(['"' which('matlab_idle.bat') '"']);
 		end
 		[base alg]=feval(['vnm_parse_' db_type], db_path, alg);
-		if isfield(alg,'matlabpool')
+		if usepool
 			matlabpool('close');
 		end
 		save(cache.obs.file,'base','db_path','alg','-v7.3');

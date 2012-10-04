@@ -115,12 +115,7 @@ function alg = vnm_feature_select(base, db_type, alg)
 	end
 
 	%% matlabpool start
-	if isfield(alg,'matlabpool')
-		usepool=true;
-	else
-		usepool=false;
-	end
-
+	usepool = isfield(alg,'matlabpool') && not(isempty(alg.matlabpool));
 	if usepool
 		if matlabpool('size')>0
 			matlabpool('close');

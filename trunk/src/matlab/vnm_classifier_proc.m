@@ -1,9 +1,5 @@
 function vnm_classifier_proc(base, db_type, alg)
-	if isfield(alg,'matlabpool') && alg.classifier.proc.K_fold>1
-		usepool=true;
-	else
-		usepool=false;
-	end
+	usepool = isfield(alg,'matlabpool') && not(isempty(alg.matlabpool)) && alg.classifier.proc.K_fold>1;
 	if usepool
 		if matlabpool('size')>0
 			matlabpool('close');
