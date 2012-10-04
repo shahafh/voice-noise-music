@@ -81,6 +81,7 @@ classdef multi_cdf
 
 			for dim=1:numel(data)
 				cf=histc(data{dim},cdf_x{dim});
+				cf=cf(:);
 
 				obj.cdfs(dim).arg=cdf_x{dim};
 				obj.cdfs(dim).cdf=cumsum(cf(1:end-1))/length(data{dim});
