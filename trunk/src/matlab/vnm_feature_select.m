@@ -375,6 +375,7 @@ function alg = vnm_feature_select(base, db_type, alg)
 		R_i=1;
 	end
 	% SFS main loop END
+	save(save_st_arg{:});
 
 	f_list = f_list(best_fs);
 	f_list_str = cellfun(@(x) (['x.' x{1} '(:,' num2str(x{2}) ')']), f_list, 'UniformOutput', false)';
