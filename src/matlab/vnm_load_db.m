@@ -2,11 +2,7 @@ function base=vnm_load_db(db_path, db_type, alg)
 	cache.obs= struct('file',['vnm_cache_' db_type '_obs.mat'],  'is_loaded',false);
 	cache.meta=struct('file',['vnm_cache_' db_type '_meta.mat'], 'is_loaded',false);
 
-	if isfield(alg.obs_general,'auto_load_cache') && alg.obs_general.auto_load_cache
-		auto_load_cache=true;
-	else
-		auto_load_cache=false;
-	end
+	auto_load_cache = isfield(alg.obs_general,'auto_load_cache') && alg.obs_general.auto_load_cache;
 
 	if exist(cache.meta.file,'file')
 		cache_val=load(cache.meta.file);
