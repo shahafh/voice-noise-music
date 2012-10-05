@@ -93,7 +93,7 @@ function alg = vnm_feature_select(base, db_type, alg)
 		alg_cur.feature_select.log_root_parfor='';
 		cache.alg.feature_select.log_root_parfor='';
 		if not(isequal(alg_cur.feature_select, cache.alg.feature_select))
-			error('emo:feature_selection:continue', 'Can''t resume calculation: algorithms are differents.');
+			error('vnm:feature_selection:continue', 'Can''t resume calculation: algorithms are differents.');
 		end
 		clear('alg_cur');
 	else
@@ -192,10 +192,10 @@ function alg = vnm_feature_select(base, db_type, alg)
 		R = alg.feature_select.lrs_opt_arg.R;
 	end
 	if goal_set >= length(f_list)
-		error('emo:FeatureSelect','The size of the goal feature set should be smaller than total number of features');
+		error('vnm:FeatureSelect','The size of the goal feature set should be smaller than total number of features');
 	end
 	if L == R
-		error('emo:FeatureSelect','In LRS options L==R. ');
+		error('vnm:FeatureSelect','In LRS options L==R. ');
 	end
 
 	%% SFS main loop BEGIN
@@ -588,5 +588,5 @@ function save_cpp_classifier(cpp_cl_path, cl_name, classes, obs_list, obs_cdf, o
 		['prediction average recall: ' num2str(pr_avr)]; ...
 		['prediction confusion matrix: ' mat2str(pr_cm)]};
 
-	xml_write(cpp_cl_path, xml, 'emosvmclassifier');
+	xml_write(cpp_cl_path, xml, 'vnmsvmclassifier');
 end

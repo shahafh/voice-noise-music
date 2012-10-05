@@ -2,7 +2,7 @@ function vnm_classify(db_path, db_type, alg)
 	addpath_recursive(fileparts(mfilename('fullpath')), 'ignore_dirs',{'\.svn' 'private' 'html' 'fspackage' 'FastICA' 'openEAR'});
 
 	if nargin<1
-		db_path=uigetdir('','Pick emotion base directory');
+		db_path=uigetdir('','Pick base directory');
 		if not(db_path)
 			return;
 		end

@@ -28,12 +28,7 @@ function vnm_classifier_proc(base, db_type, alg)
 
 			cl_obs=cell(numel(classes),1);
 			for cl_i=1:numel(classes)
-				cur_obs={};
-				for vnm_i=1:numel(classes(cl_i).base_el)
-					base_ind=strcmp(classes(cl_i).base_el{vnm_i}, base(:,1));
-					base_obs=base(base_ind).data;
-					cur_obs=[cur_obs; base_obs]; %#ok<AGROW>
-				end
+				cur_obs=base(cl_i).data;
 
 				if isfield(cl_info,'obs_expr') && not(isempty(cl_info.obs_expr))
 					for fi=1:size(cur_obs,1)

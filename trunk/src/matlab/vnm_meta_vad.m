@@ -88,7 +88,7 @@ function base=vnm_meta_vad(base, alg, algs)
 
 			if sum(cur_vad)<result_min_sz
 				kill_files(fi)=true;
-				disp(sprintf('Warning: file [%d] "%s" was removed from base [%d] "%s" by VAD.', fi,base(bi).data{fi}.file_name, bi,base{bi,1})); %#ok<DSPS>
+				disp(sprintf('Warning: file [%d] "%s" was removed from base [%d] "%s" by VAD.', fi,base(bi).data{fi}.file_name, bi,base(bi).class)); %#ok<DSPS>
 			else
 				obs=fields(base(bi).data{fi});
 				if any(strcmp(obs,'borders'))
