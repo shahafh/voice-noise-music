@@ -53,18 +53,18 @@
 %	d_d_obslist=strcat('d_',d_obslist);
 
 	alg.meta_obs(end+1)=struct('type','delta',	'params',struct( 'obs',{obslist},	'delay',0.040) );
-%	alg.meta_obs(end+1)=struct('type','delta',	'params',struct( 'obs',{d_obslist},	'delay',0.040) );
+	alg.meta_obs(end+1)=struct('type','delta',	'params',struct( 'obs',{d_obslist},	'delay',0.040) );
 
 	alg.meta_obs(end+1)=struct('type','teo',	'params',struct( 'obs',{obslist},	'delay_half',0.040) );
-%	alg.meta_obs(end+1)=struct('type','teo',	'params',struct( 'obs',{d_obslist},	'delay_half',0.040) );
+	alg.meta_obs(end+1)=struct('type','teo',	'params',struct( 'obs',{d_obslist},	'delay_half',0.040) );
 
 %	alg.meta_obs(end+1)=struct('type','nomean',	'params',struct( 'obs',{obslist} ) ); % 'teo'
 
-%	alg.meta_obs(end+1)=struct('type','nomedian','params',struct( 'obs',{obslist} ) ); % 'teo'
+	alg.meta_obs(end+1)=struct('type','nomedian','params',struct( 'obs',{obslist} ) ); % 'teo'
 %	alg.meta_obs(end+1)=struct('type','nomedian','params',struct( 'obs',{d_obslist} ) ); % 'd_teo'
 %	alg.meta_obs(end+1)=struct('type','nomedian','params',struct( 'obs',{d_d_obslist} ) ); % 'd_d_teo'
 
-%	alg.meta_obs(end+1)=struct('type','sub_div_median','params',struct(	'obs',{obslist} ) ); % 'teo'
+	alg.meta_obs(end+1)=struct('type','sub_div_median','params',struct(	'obs',{obslist} ) ); % 'teo'
 %	alg.meta_obs(end+1)=struct('type','sub_div_median','params',struct(	'obs',{d_obslist} ) ); % 'd_teo'
 %	alg.meta_obs(end+1)=struct('type','sub_div_median','params',struct(	'obs',{d_d_obslist} ) ); % 'd_d_teo'
 
