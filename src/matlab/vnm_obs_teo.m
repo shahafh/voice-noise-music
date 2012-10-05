@@ -10,7 +10,7 @@ function obs=vnm_obs_teo(x, alg, algs, etc_info)
 
 		bnd=min([f_lo f_hi], fs/2);
 		if any([f_lo f_hi]~=bnd)
-%			warning('emo:obs:teo:filter_band','Filter %d band was adjusted from [%d %d] Hz to [%d %d] Hz.', bi, f_lo, f_hi, bnd(1), bnd(2));
+%			warning('vnm:obs:teo:filter_band','Filter %d band was adjusted from [%d %d] Hz to [%d %d] Hz.', bi, f_lo, f_hi, bnd(1), bnd(2));
 		end
 
 		if f_lo>=fs/2

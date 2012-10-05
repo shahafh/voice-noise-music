@@ -57,7 +57,7 @@ function base=vnm_meta_pca(base, alg, algs) %#ok<INUSD>
 	end
 
 	if not(isempty(score)) || not(isempty(all_obs_sz))
-		error('emo:meta:pca', 'Error of data incorporation.');
+		error('vnm:meta:pca', 'Error of data incorporation.');
 	end
 end
 

@@ -20,7 +20,7 @@ function [ openEAR ] = load_openear_base( base_root, alg )
 	end
 	% No cached observations. Recalculate it
 	disp('No cached observations. Recalculating database...');
-	buildarff( base_root, 'emobase', alg );
+	buildarff( base_root, 'vnmbase', alg );
 	disp('.arff file building complete');
 	openEAR=load_arff([base_root filesep out_file '.arff']);
 	save([base_root filesep out_file '.mat'], 'openEAR');

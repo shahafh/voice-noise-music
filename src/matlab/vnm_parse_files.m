@@ -38,7 +38,7 @@ function flist=vnm_parse_files(flist, alg)
 			end
 		end
 		if filt_ord~=alg.obs_general.filter.order
-			warning('emo:emo_parse_files:fiter_order', 'Filter order was decreased from %d to %d.', alg.obs_general.filter.order, filt_ord);
+			warning('vnm:vnm_parse_files:fiter_order', 'Filter order was decreased from %d to %d.', alg.obs_general.filter.order, filt_ord);
 		end
 	end
 
@@ -73,7 +73,7 @@ function flist_i=parfor_for_body(flist_i, fs, rand_ampl, snr, preemphasis, filt_
 		if isfield(alg.obs_general,'load_file') && isfield(alg.obs_general.load_file,'channel')
 			if isnumeric(alg.obs_general.load_file.channel)
 				if alg.obs_general.load_file.channel>size(cur_x,2)
-					error('emo:parse_files:load_file', 'No channel %d in file %s. File have only %d channels.', alg.obs_general.load_file.channel, flist_i.file_name, size(cur_x,2));
+					error('vnm:parse_files:load_file', 'No channel %d in file %s. File have only %d channels.', alg.obs_general.load_file.channel, flist_i.file_name, size(cur_x,2));
 				end
 				cur_x=cur_x(:,alg.obs_general.load_file.channel);
 			else
@@ -83,7 +83,7 @@ function flist_i=parfor_for_body(flist_i, fs, rand_ampl, snr, preemphasis, filt_
 					case 'concatenate'
 						cur_x=cur_x(:);
 					otherwise
-						error('emo:parse_files:load_file', 'Unknown load file option.');
+						error('vnm:parse_files:load_file', 'Unknown load file option.');
 				end
 			end
 		else
@@ -142,7 +142,7 @@ function flist_i=parfor_for_body(flist_i, fs, rand_ampl, snr, preemphasis, filt_
 		else
 			fname=flist_i.file_name;
 		end
-		flist_i.(alg.obs(ai).type)=feval(['emo_obs_' alg.obs(ai).type], cur_x, alg.obs(ai).params, alg, struct('file_name',fname, 'fr_sz',fr_sz, 'obs_sz',obs_sz));
+		flist_i.(alg.obs(ai).type)=feval(['vnm_obs_' alg.obs(ai).type], cur_x, alg.obs(ai).params, alg, struct('file_name',fname, 'fr_sz',fr_sz, 'obs_sz',obs_sz));
 		flist_i.(alg.obs(ai).type)=feval(alg.obs_general.precision,flist_i.(alg.obs(ai).type));
 	end
 end

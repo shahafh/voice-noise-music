@@ -2,7 +2,7 @@ function obs=vnm_obs_specrel(x, alg, algs, etc_info)
 	psd=spectrogram(x, etc_info.fr_sz(2), etc_info.fr_sz(2)-etc_info.fr_sz(1)); 
 	psd=transpose(psd.*conj(psd));
 	if size(psd,1)~=etc_info.obs_sz
-		error('emo:obs:specrel:wrong_size','Calculated %d observations instead of %d in file %s.',size(psd,1),etc_info.obs_sz,etc_info.file_name);
+		error('vnm:obs:specrel:wrong_size','Calculated %d observations instead of %d in file %s.',size(psd,1),etc_info.obs_sz,etc_info.file_name);
 	end
 
 	bands=zeros(etc_info.obs_sz, size(alg.bands,1));
