@@ -49,7 +49,7 @@ function vnm_examine_obs(base, db_type, alg)
 
 	exam_log=cell(size(obs_name_ch_list));
 
-	usepool = isfield(alg,'matlabpool') && not(isempty(alg.matlabpool));
+	usepool = isfield(alg,'matlabpool');
 	if usepool
 		if matlabpool('size')>0
 			matlabpool('close');
