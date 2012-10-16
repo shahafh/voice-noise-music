@@ -1,5 +1,5 @@
 function alg = vnm_feature_select(base, db_type, alg)
-%vnm_FEATURE_SELECT	Plus-L Minus-R Feature Selection (LRS)
+%VNM_FEATURE_SELECT	Plus-L Minus-R Feature Selection (LRS)
 %
 % 	Sequential feature selection procedure which consists of L forward
 % 	search and R backward elimination (to avoid nesting) substeps on
@@ -93,7 +93,7 @@ function alg = vnm_feature_select(base, db_type, alg)
 		alg_cur.feature_select.log_root_parfor='';
 		cache.alg.feature_select.log_root_parfor='';
 		if not(isequal(alg_cur.feature_select, cache.alg.feature_select))
-			error('vnm:feature_selection:continue', 'Can''t resume calculation: algorithms are differents.');
+			error('vnm:feature_select:continue', 'Can''t resume calculation: algorithms are differents.');
 		end
 		clear('alg_cur');
 	else
@@ -119,9 +119,6 @@ function alg = vnm_feature_select(base, db_type, alg)
 	if usepool
 		if matlabpool('size')>0
 			matlabpool('close');
-		end
-		if isa(alg.matlabpool,'char')
-			alg.matlabpool={alg.matlabpool};
 		end
 		matlabpool(alg.matlabpool{:});
 		spmd
@@ -192,10 +189,10 @@ function alg = vnm_feature_select(base, db_type, alg)
 		R = alg.feature_select.lrs_opt_arg.R;
 	end
 	if goal_set >= length(f_list)
-		error('vnm:FeatureSelect','The size of the goal feature set should be smaller than total number of features');
+		error('vnm:feature_select','The size of the goal feature set should be smaller than total number of features');
 	end
 	if L == R
-		error('vnm:FeatureSelect','In LRS options L==R. ');
+		error('vnm:feature_select','In LRS options L==R. ');
 	end
 
 	%% SFS main loop BEGIN
@@ -272,11 +269,9 @@ function alg = vnm_feature_select(base, db_type, alg)
 				cur_log_name=[db_type '_step' num2str(cur_step) '_forward' num2str(L_i)];
 
 				fh=fopen([cur_log_root cur_log_name '.txt'],'w');
-				fprintf(fh, 'svm_opt_arg = "%s"\n', svm_opt_arg);
+				fprintf(fh, 'svm_opt_arg = ''%s''\n', svm_opt_arg);
 				arrayfun(@(x) fprintf(fh, '%0.5f : %s\n', x.rate, x.f_list(:)), exam_log);
 				fclose(fh);
-
-				save_cpp_classifier([cur_log_root cur_log_name '.xml'], cur_log_name, {base.class}, f_list, cdf_data, exam_log(1).fs, shift, factor, X, Y, svm_opt_arg, train_info);
 			end
 			L_i=L_i+1; %#ok<NASGU>
 		end
@@ -336,11 +331,9 @@ function alg = vnm_feature_select(base, db_type, alg)
 				cur_log_name=[db_type '_step' num2str(cur_step) '_backward' num2str(R_i)];
 
 				fh=fopen([cur_log_root cur_log_name '.txt'],'w');
-				fprintf(fh, 'svm_opt_arg = "%s"\n', svm_opt_arg);
+				fprintf(fh, 'svm_opt_arg = ''%s''\n', svm_opt_arg);
 				arrayfun(@(x) fprintf(fh, '%0.5f : %s\n', x.rate, x.f_list(:)), exam_log);
 				fclose(fh);
-
-				save_cpp_classifier([cur_log_root cur_log_name '.xml'], cur_log_name, {base.class}, f_list, cdf_data, exam_log(1).fs, shift, factor, X, Y, svm_opt_arg, train_info);
 			end
 			R_i=R_i+1; %#ok<NASGU>
 		end
@@ -353,8 +346,8 @@ function alg = vnm_feature_select(base, db_type, alg)
 			[svm_opt_arg cur_best.rate] = libsvm_modsel(Y, [X{cur_best.fs}], train_info, svm_opt_arg, alg);
 
 			fh=fopen([sfs_log_root filesep 'Step' num2str(cur_step) filesep ...
-					'sfs_' db_type '_step' num2str(cur_step) '_model_selection.txt'],'w');
-			fprintf(fh, 'svm_opt_arg = "%s"\n', svm_opt_arg);
+					db_type '_step' num2str(cur_step) '_model_selection.txt'],'w');
+			fprintf(fh, 'svm_opt_arg = ''%s''\n', svm_opt_arg);
 			fclose(fh);
 		end
 
@@ -379,18 +372,18 @@ function alg = vnm_feature_select(base, db_type, alg)
 
 	f_list = f_list(best_fs);
 	f_list_str = cellfun(@(x) (['x.' x{1} '(:,' num2str(x{2}) ')']), f_list, 'UniformOutput', false)';
-	alg.classifier.obs_expr = f_list_str;
-	if isfield(alg.classifier, 'wks_libsvm')
-		alg.classifier.wks_libsvm.libsvm_opt_arg = svm_opt_arg;
+	alg.classifier.proc.obs_expr = f_list_str;
+	if isfield(alg.classifier, 'libsvm')
+		alg.classifier.libsvm.opt_arg = svm_opt_arg;
 	end
 
 	% Summary of the SFS procedure:
 	% Store the best feature set, model parameters and the same for the
 	% each step.
 	fh=fopen([sfs_log_root filesep '_all_steps_best.txt'],'w');
-	fprintf(fh, 'Best: fnum - %.0f, RR ~ %0.5f, svm_opt_arg = "%s"; features : %s\n\n', length(best_fs), best_rr, best_svm_opt_arg, ...
+	fprintf(fh, 'Best: fnum - %.0f, RR ~ %0.5f, svm_opt_arg = ''%s''; features : %s\n\n', length(best_fs), best_rr, best_svm_opt_arg, ...
 		sprintf('''%s'' ', f_list_str{1:end}));
-	cellfun(@(x) fprintf(fh, 'Step %.0f, fnum - %.0f, RR ~ %0.5f, svm_opt_arg = "%s"; features : %s\n', x.step ,length(x.fs), x.rate, x.svm_opt_arg, x.f_list(2:end)), best_rates);
+	cellfun(@(x) fprintf(fh, 'Step %.0f, fnum - %.0f, RR ~ %0.5f, svm_opt_arg = ''%s''; features : %s\n', x.step ,length(x.fs), x.rate, x.svm_opt_arg, x.f_list(2:end)), best_rates);
 	fclose(fh);
 
 	if usepool
@@ -537,56 +530,3 @@ function svm_weight_str=make_weight_string(Y)
 	svm_weight_str=cell2mat(cellfun(@(cl_i,cl_w) sprintf(' -w%s %e',cl_i,cl_w), cl_names(:)', num2cell(min(cl_size)./cl_size(:)'), 'UniformOutput',false));
 end
 
-function save_cpp_classifier(cpp_cl_path, cl_name, classes, obs_list, obs_cdf, obs_ind, shift, factor, X, Y, svm_opt_arg, train_info)
-	xml.model.ATTRIBUTE=struct('enable',true, 'name',cl_name);
-	xml.model.COMMENT='';
-
-	obs_list=obs_list(obs_ind);
-	obs_cdf=obs_cdf(obs_ind);
-
-	for oi=1:length(obs_list)
-		xml.model.observation(oi).ATTRIBUTE=struct('name',obs_list{oi}{1}, 'index',obs_list{oi}{2}-1, 'order',oi-1);
-
-		if(oi==1)
-			for ci=1:length(classes)
-				xml.model.class(ci).ATTRIBUTE=struct('name',classes{ci}, 'order',ci-1);
-			end
-		end
-
-		for ci=1:length(classes)
-			xml.model.class(ci).median_cdf(oi).ATTRIBUTE.order=oi-1;
-			xml.model.class(ci).median_cdf(oi).arg=obs_cdf{oi}{ci}.cdfs.arg(:)';
-			xml.model.class(ci).median_cdf(oi).cdf=obs_cdf{oi}{ci}.cdfs.cdf(:)';
-		end
-	end
-
-	shift=cell2mat(shift(obs_ind));
-	factor=cell2mat(factor(obs_ind));
-	X=cell2mat(X(obs_ind));
-
-	xml.model.svm.data_scale=struct('shift',shift, 'factor',factor);
-
-	svm_model=libsvmtrain(Y, X, svm_opt_arg);
-
-	tmp_svm_filename=[tempname() '.txt'];
-	libsvmmodelwrite(tmp_svm_filename, svm_model);
-	xml.model.svm.model.CDATA_SECTION=fileread(tmp_svm_filename);
-	delete(tmp_svm_filename);
-
-	cv_svm_Y=libsvmtrain(Y, X, ['-v ' num2str(train_info.K_fold) ' ' svm_opt_arg]);
-	[cv_acc, cv_avr, ~, cv_cm] = lib_svm.rate_prediction(Y, cv_svm_Y, 'order',1:length(classes));
-
-	pr_svm_Y=libsvmpredict(Y, X, svm_model);
-	[pr_acc, pr_avr, ~, pr_cm] = lib_svm.rate_prediction(Y, pr_svm_Y, 'order',1:length(classes));
-
-	xml.model.COMMENT={ ...
-		['svm_opt_arg: ' svm_opt_arg]; ...
-		['cross-validation accuracy: ' num2str(cv_acc)]; ...
-		['cross-validation average recall: ' num2str(cv_avr)]; ...
-		['cross-validation confusion matrix: ' mat2str(cv_cm)]; ...
-		['prediction accuracy: ' num2str(pr_acc)]; ...
-		['prediction average recall: ' num2str(pr_avr)]; ...
-		['prediction confusion matrix: ' mat2str(pr_cm)]};
-
-	xml_write(cpp_cl_path, xml, 'vnmsvmclassifier');
-end

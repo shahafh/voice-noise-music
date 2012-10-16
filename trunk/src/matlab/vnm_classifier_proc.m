@@ -1,11 +1,8 @@
-function vnm_classifier_proc(base, db_type, alg)
-	usepool = isfield(alg,'matlabpool') && not(isempty(alg.matlabpool)) && alg.classifier.proc.K_fold>1;
+function emo_classifier_proc(base, db_type, alg)
+	usepool = isfield(alg,'matlabpool') && not(strcmpi(alg.classifier.proc.crossvalidation,'none')) && alg.classifier.proc.folds>1;
 	if usepool
 		if matlabpool('size')>0
 			matlabpool('close');
-		end
-		if isa(alg.matlabpool,'char')
-			alg.matlabpool={alg.matlabpool};
 		end
 		matlabpool(alg.matlabpool{:});
 		spmd
@@ -13,88 +10,65 @@ function vnm_classifier_proc(base, db_type, alg)
 			dos(['"' which('matlab_idle.bat') '"']);
 		end
 	end
+	
+	%% Генерация наблюдений из базы для всех строящихся классификаторов
+	cl_obs=cell(size(base));
+	for cl_i=1:numel(base)
+		cl_obs{cl_i} = cellfun(@(x) make_file_obs(x, alg.classifier.proc.obs_expr), base(cl_i).data, 'UniformOutput',false);
+		cl_obs{cl_i} = cl_obs{cl_i}(randperm(numel(cl_obs{cl_i}))); % randomize data order inside each class
+	end
+	cl_grp = cellfun(@(x,i) repmat({base(i).class},length(x),1), cl_obs, num2cell(1:length(cl_obs))', 'UniformOutput',false);
+	
+	train_part=0.5;
+	if isfield(alg.classifier.proc,'train_part')
+		train_part=alg.classifier.proc.train_part;
+	end
+	cl_sz=cellfun(@length, cl_obs);
+	train_info.train_sz=round(cl_sz*train_part);
 
+	%% Цикл построения классификаторов
 	algs=lower(fieldnames(alg.classifier));
 	algs(strcmp('proc',algs))=[];
 	for a_i=1:numel(algs)
+		clf_name=algs{a_i};
 
-		cl_name=algs{a_i};
+		%% make some common and useful data for classifiers
+		etc_data=make_etc_data({base.class}, cl_obs);
 
-		classes_types=fieldnames(alg.classifier.proc.classes.(db_type));
-		for classes_types_i=1:length(classes_types)
-			cl_info=alg.classifier.proc.classes.(db_type).(classes_types{classes_types_i});
-			classes=cl_info.classes;
-			cl_alg=alg.classifier.(cl_name);
-
-			cl_obs=cell(numel(classes),1);
-			for cl_i=1:numel(classes)
-				cur_obs=base(cl_i).data;
-
-				if isfield(cl_info,'obs_expr') && not(isempty(cl_info.obs_expr))
-					for fi=1:size(cur_obs,1)
-						cur_obs{fi}=make_file_obs(cur_obs{fi}, cl_info.obs_expr); %#ok<AGROW>
-					end
-				end
-
-				cl_obs{cl_i,1}=cur_obs;
-			end
-
-			train_info=struct('train_part',0.5, 'do_balance',false);
-			if isfield(alg.classifier.proc,'train_part')
-				train_info.train_part=alg.classifier.proc.train_part;
-			end
-			if isfield(alg.classifier.proc,'test_part')
-				train_info.test_part=alg.classifier.proc.test_part;
-			end
-			if isfield(cl_alg,'train_set_balance')
-				train_info.do_balance=cl_alg.train_set_balance;
-			end
-
-			cl_objs=cell(alg.classifier.proc.K_fold,1);
-			cl_confs=cell(alg.classifier.proc.K_fold,1);
-			cl_confs_raw=cell(alg.classifier.proc.K_fold,1);
-			cl_rates=zeros(alg.classifier.proc.K_fold,1);
+		%% Процедура перекрестной проверки классификатора
+		if not(strcmpi(alg.classifier.proc.crossvalidation,'none'))
+			cl_confs=cell(1,1,alg.classifier.proc.folds);
 
 			if usepool
-				parfor K=1:alg.classifier.proc.K_fold
-					[cl_objs{K} cl_rates(K) cl_confs{K} cl_confs_raw{K}]=make_and_examine_classifier(classes, cl_obs, train_info, cl_name, cl_info, alg);
+				parfor K=1:alg.classifier.proc.folds
+					cl_confs{K}=make_and_examine_classifier(K, cl_obs, etc_data, train_info, clf_name, alg);
 				end
 			else
-				for K=1:alg.classifier.proc.K_fold
-					[cl_objs{K} cl_rates(K) cl_confs{K} cl_confs_raw{K}]=make_and_examine_classifier(classes, cl_obs, train_info, cl_name, cl_info, alg);
+				for K=1:alg.classifier.proc.folds
+					cl_confs{K}=make_and_examine_classifier(K, cl_obs, etc_data, train_info, clf_name, alg);
 				end
 			end
 
-			[~,si]=sort(cl_rates);
-			best_ind=si(round(length(si)/2));
+			conf_mat = sum(cell2mat(cl_confs),3);
 
-			cl_best_rate=cl_rates(best_ind);
-			cl_best_conf=cl_confs{best_ind};
-			cl_best_obj=struct('info',struct('type',cl_name, 'name',classes_types{classes_types_i}, 'base_type',db_type, 'cl_info',cl_info, 'alg',alg), ...
-								'obj',cl_objs{best_ind});
+			cm_sum=sum(conf_mat,2);
+			cm_sum(cm_sum==0)=1;
+			conf_mat_norm=conf_mat./repmat(cm_sum,1,size(conf_mat,2));
 
-			save_classifier(cl_best_obj);
-
-			fprintf('Worst RR - %f; Best RR - %f; Mean RR ~ %f; Median RR - %f\n', min(cl_rates), max(cl_rates), mean(cl_rates), cl_best_rate);
-
-			disp(['Classifier ' db_type '.' classes_types{classes_types_i} '.' cl_name]);
-			disp(['    Rate ' num2str(cl_best_rate)]);
+			fprintf(['Classifier ' db_type '.' clf_name '\n']);
+			fprintf('    Cross-validation accuracy %f, average recall %f\n', trace(conf_mat)/sum(conf_mat(:)), mean(diag(conf_mat_norm)));
 			disp('    Confusion matrix');
-			disp([{'' classes.name}; {classes.name}' num2cell(cl_best_conf)]);
+			disp([{''} etc_data.cl_name'; etc_data.cl_name num2cell(conf_mat)]);
 
-			disp('');
-			disp('    Raw confusion matrix');
-			disp([{'' classes.name}; {classes.name}' num2cell(cl_confs_raw{best_ind})]);
-
-			cl_confs_wa=zeros(size(cl_confs{1}));
-			for K=1:alg.classifier.proc.K_fold
-				cl_confs_wa=cl_confs_wa+cl_confs{K}*cl_rates(K);
-			end
-			cl_confs_wa=cl_confs_wa/sum(cl_rates);
-			disp('');
-			disp('    Weighted by rate average confusion matrix');
-			disp([{'' classes.name}; {classes.name}' num2cell(cl_confs_wa)]);
+			disp('    Normalized confusion matrix');
+			disp([{''} etc_data.cl_name'; etc_data.cl_name num2cell(conf_mat_norm)]);
 		end
+
+		%% Построение классификатора по всем данным и его сохранение
+		cl_obj=feval(['emo_classifier_' clf_name '.train'], vertcat(cl_obs{:}), vertcat(cl_grp{:}), etc_data, alg.classifier.(clf_name));
+
+		cl_obj=struct('info',struct('type',clf_name, 'base_type',db_type, 'alg',alg), 'obj',cl_obj);
+		save_classifier(cl_obj);
 	end
 
 	if usepool
@@ -110,100 +84,69 @@ function save_classifier(classifier)
 	if isfield(classifier.info.alg.classifier.proc,'save_path')
 		cl_save_path=[classifier.info.alg.classifier.proc.save_path filesep];
 	else
-		cl_save_path='';
+		cl_save_path='.';
 	end
 
-	save([cl_save_path filesep 'vnm_' classifier.info.base_type '_' classifier.info.type '_' classifier.info.name '.mat'], 'classifier', '-v7.3');
+	save([cl_save_path filesep 'emo_' classifier.info.base_type '_' classifier.info.type '.mat'], 'classifier', '-v7.3');
 end
 
-function [cl_objs_K cl_rates_K cl_confs_K cl_confs_raw_K]=make_and_examine_classifier(classes, glob_cl_obs, train_info, cl_name, cl_info, alg)
-	cl_sz=cellfun(@length, glob_cl_obs);
+function cl_conf=make_and_examine_classifier(K, cl_obs, etc_data, train_info, clf_name, alg)
+	% prepare train and test sets
+	train_dat = cell(size(cl_obs));		train_grp = cell(size(cl_obs));
+	test_dat =  cell(size(cl_obs));		test_grp =  cell(size(cl_obs));
 
-	%% prepare train and test sets
-	% define train and test set sizes
-	if train_info.do_balance
-		train_sz=repmat(round(min(cl_sz)*train_info.train_part), length(classes), 1);
-	else
-		train_sz=round(cl_sz*train_info.train_part);
+	for cl_i = 1:length(cl_obs)
+		switch lower(alg.classifier.proc.crossvalidation)
+			case 'random subsampling'
+				train_set = false(size(cl_obs{cl_i}));
+				train_set(randperm(length(cl_obs{cl_i}), train_info.train_sz(cl_i))) = true;
+			case 'k-fold'
+				train_set = true(size(cl_obs{cl_i}));
+				rg = round(length(train_set)*[(K-1) K]/alg.classifier.proc.folds);
+				train_set(rg(1)+1:rg(2)) = false;
+			otherwise
+				error('emo:classifier:proc', 'Unknown cross-validation algorithm name.');
+		end
+		train_dat{cl_i} = cl_obs{cl_i}(train_set);
+		test_dat{cl_i} =  cl_obs{cl_i}(not(train_set));
+		
+		train_grp{cl_i} = repmat(etc_data.cl_name(cl_i), length(train_dat{cl_i}), 1);
+		test_grp{cl_i} =  repmat(etc_data.cl_name(cl_i), length(test_dat{cl_i}), 1);
 	end
-	if isfield(train_info,'test_part')
-		test_sz=round(cl_sz*train_info.test_part);
-	else
-		test_sz=cl_sz-train_sz;
-	end
 
-	train_sz_sum=[0; cumsum(train_sz)];
-	test_sz_sum =[0; cumsum(test_sz)];
-
-	% generate train and test sets from class observations with spesified size
-	train_dat=cell(sum(train_sz),1);		train_grp=cell(size(train_dat));
-	test_dat =cell(sum(test_sz),1);			test_grp =cell(size(test_dat));
-
-	for cl_i=1:length(cl_sz)
-		rnd_ind=randperm(cl_sz(cl_i));
-
-		train_src_ind=rnd_ind(1:train_sz(cl_i));					train_dst_ind=train_sz_sum(cl_i)+1:train_sz_sum(cl_i+1);
-		test_src_ind=rnd_ind(cl_sz(cl_i)-(test_sz(cl_i)-1:-1:0));	test_dst_ind =test_sz_sum(cl_i)+1 :test_sz_sum(cl_i+1); 
-
-		train_dat(train_dst_ind)=glob_cl_obs{cl_i}(train_src_ind);		train_grp(train_dst_ind)={classes(cl_i).name};
-		test_dat(test_dst_ind)=  glob_cl_obs{cl_i}(test_src_ind);		test_grp(test_dst_ind)=  {classes(cl_i).name};
-	end
+	train_dat = vertcat(train_dat{:});		train_grp = vertcat(train_grp{:});
+	test_dat =  vertcat(test_dat{:});		test_grp =  vertcat(test_grp{:});
 
 	% randomize data order in train and test sets
 	rnd_ind=randperm(length(train_dat));	train_dat=train_dat(rnd_ind);	train_grp=train_grp(rnd_ind);
 	rnd_ind=randperm(length(test_dat));		test_dat=test_dat(rnd_ind);		test_grp=test_grp(rnd_ind);
 
-	%% make some common and useful data for classifiers from train data set
-	% make class observation form train set
-	etc_data=make_etc_data(train_dat, train_grp, {classes.name}, cl_info);
+	% train classifier and test its prediction
+	cl_objs_K=feval(['emo_classifier_' clf_name '.train'], train_dat, train_grp, etc_data, alg.classifier.(clf_name));
 
-	cl_objs_K=feval(['vnm_classifier_' cl_name '.train'], train_dat, train_grp, etc_data, alg.classifier.(cl_name));
-	cl_out=cl_objs_K.classify(test_dat);
-	[cl_rates_K cl_confs_K cl_confs_raw_K]=classify_rate({classes.name}, test_grp, cl_out);
+	cl_conf = confusionmat(test_grp, cl_objs_K.classify(test_dat), 'Order',etc_data.cl_name);
 end
 
-function etc_data=make_etc_data(train_dat, train_grp, classes, cl_info)
+function etc_data=make_etc_data(classes, cl_obs)
 	etc_data.cl_name=classes(:);
 
-	etc_data.cl_obs=cell(size(etc_data.cl_name));
-	for i=1:length(etc_data.cl_obs)
-		etc_data.cl_obs{i}=train_dat(strcmp(train_grp,etc_data.cl_name{i}),:);
-	end
+	% Построение медианных функций распределения
+	etc_data.cl_cdf = cell(length(etc_data.cl_name),1);
+	for cl_i = 1:length(etc_data.cl_cdf)
+		cl_obs_cat = vertcat(cl_obs{cl_i}{:});
 
-	% make median cdf's for train data
-	if isfield(cl_info,'obs_expr') && not(isempty(cl_info.obs_expr))
-		etc_data.cl_cdf=cell(size(etc_data.cl_obs,1),1);
-		for cl_i=1:size(etc_data.cl_obs,1)
-			all_cl_obs=vertcat(etc_data.cl_obs{cl_i,1}{:});
-			cl_obs_arg=cell(1,size(all_cl_obs,2));
-			for obs_i=1:length(cl_obs_arg)
-				cl_obs_arg{obs_i}=quantile(cell2mat(all_cl_obs(:,obs_i)), linspace(0.05,0.95,250)');
-			end
-			files_cdf=cell(length(cl_obs_arg),1);
-			for obs_i=1:length(files_cdf)
-				files_cdf{obs_i}=zeros(length(cl_obs_arg{obs_i})-1, length(etc_data.cl_obs{cl_i,1}));
-			end
+		cl_obs_arg = cell(1,size(cl_obs_cat,2));
+		for j=1:size(cl_obs_cat,2)
+			cl_obs_arg{j} = quantile(cell2mat(cl_obs_cat(:,j)), linspace(0.05,0.95,250)');
+		end
 
-			for file_i=1:length(etc_data.cl_obs{cl_i,1})
-				file_obj=multi_cdf.fit(etc_data.cl_obs{cl_i,1}{file_i}, cl_obs_arg);
-				for obs_i=1:length(files_cdf)
-					files_cdf{obs_i}(:,file_i)=file_obj.cdfs(obs_i).cdf;
-				end
-			end
+		cl_obs_cdf = cellfun(@(x) multi_cdf.fit(x,cl_obs_arg), cl_obs{cl_i}', 'UniformOutput',false);
 
-			etc_data.cl_cdf{cl_i}=file_obj;
-			for obs_i=1:length(files_cdf)
-				etc_data.cl_cdf{cl_i}.cdfs(obs_i).cdf=median(files_cdf{obs_i},2);
-			end
+		etc_data.cl_cdf{cl_i} = multi_cdf;
+		etc_data.cl_cdf{cl_i}.cdfs = struct('arg',{}, 'cdf',{});
+
+		for j=1:size(cl_obs_cat,2)
+			etc_data.cl_cdf{cl_i}.cdfs(j) = struct('arg',cl_obs_arg{j}, 'cdf',median(cell2mat(cellfun(@(x) x.cdfs(j).cdf, cl_obs_cdf, 'UniformOutput',false)),2));
 		end
 	end
-end
-
-function [cl_rate cl_conf cl_conf_raw]=classify_rate(class_name, test_grp, cl_res)
-	cl_conf_raw=confusionmat(test_grp, cl_res, 'order',class_name);
-	cl_conf=cl_conf_raw;
-	for i=1:size(cl_conf,1)
-		cl_conf(i,:)=cl_conf(i,:)/(sum(cl_conf(i,:))+realmin('double'));
-	end
-	cl_rate=mean(diag(cl_conf));
 end
