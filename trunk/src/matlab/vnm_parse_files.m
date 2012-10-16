@@ -47,7 +47,7 @@ function flist=vnm_parse_files(flist, alg)
 		rand_ampl=alg.obs_general.rand_ampl;
 	end
 
-	if isfield(alg,'matlabpool') && not(isempty(alg.matlabpool)) && matlabpool('size')>0
+	if isfield(alg,'matlabpool')
 		parfor i=1:length(flist) % parfor
 			flist{i}=parfor_for_body(flist{i}, fs, rand_ampl, snr, preemphasis, filt_ord, filt_b, filt_a, alg);
 		end

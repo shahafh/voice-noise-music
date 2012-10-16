@@ -38,7 +38,7 @@ function base=vnm_load_db(db_path, db_type, alg)
 
 	if not(cache.obs.is_loaded)
 		disp('CACHE: raw observations is wrong or not exists. Recalculation ...');
-		usepool = isfield(alg,'matlabpool') && not(isempty(alg.matlabpool));
+		usepool = isfield(alg,'matlabpool');
 		if usepool
 			if matlabpool('size')>0
 				matlabpool('close');
