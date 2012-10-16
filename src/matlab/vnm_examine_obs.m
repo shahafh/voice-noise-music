@@ -54,9 +54,6 @@ function vnm_examine_obs(base, db_type, alg)
 		if matlabpool('size')>0
 			matlabpool('close');
 		end
-		if isa(alg.matlabpool,'char')
-			alg.matlabpool={alg.matlabpool};
-		end
 		matlabpool(alg.matlabpool{:});
 		spmd
 			addpath_recursive(regexp(path(),'[^;]*','match','once'), 'ignore_dirs',{'\.svn' 'private' 'html' 'fspackage' 'FastICA' 'openEAR'});

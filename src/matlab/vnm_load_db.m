@@ -43,9 +43,6 @@ function base=vnm_load_db(db_path, db_type, alg)
 			if matlabpool('size')>0
 				matlabpool('close');
 			end
-			if isa(alg.matlabpool,'char')
-				alg.matlabpool={alg.matlabpool};
-			end
 			matlabpool(alg.matlabpool{:});
 		end
 		spmd

@@ -79,7 +79,6 @@
 	alg.meta_obs(end+1)=struct('type','isnan',	'params',struct( 'isremove',true, 'verbose',true) );
 
 
-	svm_opt_arg={{'Kernel_Function','rbf', 'options',statset('MaxIter',1000000), 'kernelcachelimit',10000}};
     libsvm_opt_arg =' -c 512 -g 0.125 -rnd 10 -h 0 -q'; %  ' -c 8 -g 0.0078125 -h 0 -q'; %   ' -c 512 -g 0.0019531 -h 0 -q';
 
 
@@ -105,14 +104,17 @@
 
 
 	%% Classifiers configuration
-%	alg.classifier.proc=	struct(	'K_fold',1, 'train_part',1, 'test_part',1, 'classes',cl_classes, 'save_path','./');
-%	alg.classifier.proc=	struct('type',{{'K-fold' 'Random subsampling'}}, 'folds',20, 'train_part',0.7, 'classes',cl_classes, 'save_path','c:\EmoWork\'); % 'test_part',0.5
+	alg.classifier.proc=	struct('crossvalidation','K-fold', ... % 'K-fold' 'Random subsampling' 'None'
+									'folds',20, ...
+									'train_part',0.9, ... % only for 'Random subsampling'
+									'save_path','.\emo_proc'); 
 
-%	alg.classifier.gmm=struct(	'gmm_opt_arg',{{4, 'Replicates',3, 'Regularize',1e-6, 'options',statset('MaxIter',10000, 'TolX',1e-6)}});
+	% Перечень видов наблюдений для построения наулучшего классификатора -- пример
+	alg.classifier.proc.obs_expr={'x.pitch(:,1)' 'x.d_pitch(:,1)'};
 
-%	alg.classifier.wks=struct(	'train_set_balance',false, 'svm_opt_arg',svm_opt_arg);
+%	alg.classifier.gmm=struct(	'opt_arg',{{4, 'Replicates',3, 'Regularize',1e-6, 'options',statset('MaxIter',10000, 'TolX',1e-6)}});
 
-%	alg.classifier.wks_libsvm = struct(	'train_set_balance',false,  'libsvm_opt_arg', libsvm_opt_arg);
+	alg.classifier.libsvm = struct(	'opt_arg', libsvm_opt_arg);
 
 	alg.matlabpool={'local'};
 end

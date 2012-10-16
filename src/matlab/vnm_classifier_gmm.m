@@ -1,10 +1,10 @@
-classdef vnm_classifier_gmm
-	%vnm_CLASSIFIER_GMM Kolmogorov-Smirnov distance GMM classifier
+classdef emo_classifier_gmm
+	%EMO_CLASSIFIER_GMM Kolmogorov-Smirnov distance GMM classifier
 	%   Calculates Kolmogorov-Smirnov distances between cumulative distribution
 	%   functions and classify incoming objects by these distances by GMM
 
 	%   Author(s): A.G.Davydov
-	%   $Revision: 1.0.0.1 $  $Date: 2011/08/09 16:29:55 $ 
+	%   $Revision: 1.0.0.2 $  $Date: 2012/10/15 22:45:05 $ 
 
 	properties
 		classes;
@@ -13,17 +13,17 @@ classdef vnm_classifier_gmm
 	end
 
 	methods(Access='protected')
-		function obj=vnm_classifier_gmm()
+		function obj=emo_classifier_gmm()
 		end
 	end
 
 	methods(Static)
-		function obj=train(train_dat, train_grp, etc_data, cl_alg) %#ok<INUSL,INUSD>
-			obj=vnm_classifier_gmm;
+		function obj=train(train_dat, train_grp, etc_data, cl_alg)
+			obj=emo_classifier_gmm;
 
-			gmm_opt_arg={};
-			if nargin>=4 && isfield(cl_alg, 'gmm_opt_arg')
-				gmm_opt_arg=cl_alg.gmm_opt_arg;
+			opt_arg={};
+			if nargin>=4 && isfield(cl_alg, 'opt_arg')
+				opt_arg=cl_alg.opt_arg;
 			end
 
 			obj.classes=etc_data.cl_name;
@@ -31,7 +31,12 @@ classdef vnm_classifier_gmm
 
 			obj.gmm=cell(numel(obj.classes),1);
 			for cl_i=1:numel(obj.classes)
-				obj.gmm{cl_i}=gmdistribution.fit(multi_cdf.cdfs_dist(obj.cdf(cl_i),etc_data.cl_obs{cl_i}), gmm_opt_arg{:});
+				if isa(train_grp,'cell')
+					ii = cellfun(@(x) isequal(x,obj.classes{cl_i}), train_grp);
+				else
+					ii = train_grp==etc_data(cl_i);
+				end
+				obj.gmm{cl_i}=gmdistribution.fit(multi_cdf.cdfs_dist(obj.cdf(cl_i), train_dat(ii)), opt_arg{:});
 			end
 		end
 	end
