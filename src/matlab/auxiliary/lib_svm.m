@@ -154,6 +154,12 @@ classdef lib_svm
 			end
 
 			predict = cellfun(@(x) obj_classes(x), predict, 'UniformOutput',false);
+
+			% resort back
+			[~,back_ind] = sort(rand_ind);
+			cost =    cost(back_ind);
+			gamma =   gamma(back_ind);
+			predict = predict(back_ind);
 		end
 		
 		function [accuracy, average_recall, asymm_est_cur, conf_mat, order, conf_mat_norm]=rate_prediction(g,ghat,varargin)
