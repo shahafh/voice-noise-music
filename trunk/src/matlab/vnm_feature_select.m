@@ -98,6 +98,7 @@ function alg = vnm_feature_select(base, db_type, alg)
 		clear('alg_cur');
 	else
 		mkdir(sfs_log_root);
+		mkdir(sfs_log_root_parfor);
 	end
 
 	feature_list = fieldnames(base(1).data{1});
@@ -207,9 +208,9 @@ function alg = vnm_feature_select(base, db_type, alg)
 	L_i=1;
 	R_i=1;
 	if exist(save_st_arg{1},'file')
-		alg_in=alg;
+	%	alg_in=alg;
 		load(save_st_arg{1});
-		alg.matlabpool=alg_in.matlabpool;
+	%	alg.matlabpool=alg_in.matlabpool;
 	end
 
 
