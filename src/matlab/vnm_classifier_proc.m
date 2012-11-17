@@ -1,4 +1,4 @@
-function emo_classifier_proc(base, db_type, alg)
+function vnm_classifier_proc(base, db_type, alg)
 	usepool = isfield(alg,'matlabpool') && not(strcmpi(alg.classifier.proc.crossvalidation,'none')) && alg.classifier.proc.folds>1;
 	if usepool
 		if matlabpool('size')>0
@@ -65,7 +65,7 @@ function emo_classifier_proc(base, db_type, alg)
 		end
 
 		%% Построение классификатора по всем данным и его сохранение
-		cl_obj=feval(['emo_classifier_' clf_name '.train'], vertcat(cl_obs{:}), vertcat(cl_grp{:}), etc_data, alg.classifier.(clf_name));
+		cl_obj=feval(['vnm_classifier_' clf_name '.train'], vertcat(cl_obs{:}), vertcat(cl_grp{:}), etc_data, alg.classifier.(clf_name));
 
 		cl_obj=struct('info',struct('type',clf_name, 'base_type',db_type, 'alg',alg), 'obj',cl_obj);
 		save_classifier(cl_obj);
@@ -87,7 +87,7 @@ function save_classifier(classifier)
 		cl_save_path='.';
 	end
 
-	save([cl_save_path filesep 'emo_' classifier.info.base_type '_' classifier.info.type '.mat'], 'classifier', '-v7.3');
+	save([cl_save_path filesep 'vnm_' classifier.info.base_type '_' classifier.info.type '.mat'], 'classifier', '-v7.3');
 end
 
 function cl_conf=make_and_examine_classifier(K, cl_obs, etc_data, train_info, clf_name, alg)
@@ -122,7 +122,7 @@ function cl_conf=make_and_examine_classifier(K, cl_obs, etc_data, train_info, cl
 	rnd_ind=randperm(length(test_dat));		test_dat=test_dat(rnd_ind);		test_grp=test_grp(rnd_ind);
 
 	% train classifier and test its prediction
-	cl_objs_K=feval(['emo_classifier_' clf_name '.train'], train_dat, train_grp, etc_data, alg.classifier.(clf_name));
+	cl_objs_K=feval(['vnm_classifier_' clf_name '.train'], train_dat, train_grp, etc_data, alg.classifier.(clf_name));
 
 	cl_conf = confusionmat(test_grp, cl_objs_K.classify(test_dat), 'Order',etc_data.cl_name);
 end

@@ -1,4 +1,4 @@
-classdef emo_classifier_libsvm
+classdef vnm_classifier_libsvm
 	%EMO_CLASSIFIER_LIBSVM Gini distance SVM classifier
 	%   Calculates Gini distances between cumulative distribution
 	%   functions and classify incoming objects by these distances using
@@ -11,13 +11,13 @@ classdef emo_classifier_libsvm
 	end
 
 	methods(Access='protected')
-		function obj=emo_classifier_libsvm()
+		function obj=vnm_classifier_libsvm()
 		end
 	end
 
 	methods(Static)
 		function obj=train(train_dat, train_grp, etc_data, cl_alg)
-			obj=emo_classifier_libsvm;
+			obj=vnm_classifier_libsvm;
 
 			obj.cdf=etc_data.cl_cdf;
 
