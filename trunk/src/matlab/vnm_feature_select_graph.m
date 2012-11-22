@@ -16,7 +16,7 @@ function vnm_feature_select_graph(sfs_root)
 	end
 	grid('on');
 	xlabel('Features number');
-	ylabel('Prefiction performance');
+	ylabel('Prediction performance');
 	title(sfs_root,'Interpreter','none');
 end
 
