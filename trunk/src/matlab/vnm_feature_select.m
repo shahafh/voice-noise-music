@@ -210,7 +210,7 @@ function alg = vnm_feature_select(base, db_type, alg)
 	if exist(save_st_arg{1},'file')
 		alg_in=alg;
 		load(save_st_arg{1});
-		if isfield(alg_in.matlabpool)
+		if isfield(alg_in,'matlabpool')
 			alg.matlabpool=alg_in.matlabpool;
 		else
 			if isfield(alg,'matlabpool')
