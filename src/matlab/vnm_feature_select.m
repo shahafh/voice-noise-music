@@ -416,29 +416,37 @@ function [X Y cdf_data] = prepare_data_wks(base, f_list)
 
 	h = waitbar(0);
 	cdf_data=cell(length(f_list),1);
+	base_data = vertcat(base.data);
 	for flist_i = 1:length(f_list)
-		% Make median CDF's
-		cl_cdf=cell(size(base));
-		cl_obs=cell(size(base));
-		for cl_i=1:numel(base)
-			cl_obs{cl_i}=cellfun(@(x) x.(f_list{flist_i}{1})(:,f_list{flist_i}{2}), base(cl_i).data, 'UniformOutput',false);
+		if all(cellfun(@(x) size(x.(f_list{flist_i}{1}),1)==1, base_data))
+			% Это скорее всего статистические данные -- для каждого файла
+			% есть только одно значени, а не вектор значений
+			X{flist_i}=double( cellfun(@(x) x.(f_list{flist_i}{1})(:,f_list{flist_i}{2}), base_data) );
 
-			cl_obs_arg={quantile(cell2mat(cl_obs{cl_i}), linspace(0.05,0.95,250)')};
+		else
+			% Make median CDF's
+			cl_cdf=cell(size(base));
+			cl_obs=cell(size(base));
+			for cl_i=1:numel(base)
+				cl_obs{cl_i}=cellfun(@(x) x.(f_list{flist_i}{1})(:,f_list{flist_i}{2}), base(cl_i).data, 'UniformOutput',false);
 
-			files_cdf=cell2mat(cellfun(@(x) multi_cdf.fit(x,cl_obs_arg).cdfs.cdf, cl_obs{cl_i}', 'UniformOutput',false));
+				cl_obs_arg={quantile(cell2mat(cl_obs{cl_i}), linspace(0.05,0.95,250)')};
 
-			cl_cdf{cl_i}=multi_cdf;
-			cl_cdf{cl_i}.cdfs.arg=cl_obs_arg{1};
-			cl_cdf{cl_i}.cdfs.cdf=median(files_cdf,2);
+				files_cdf=cell2mat(cellfun(@(x) multi_cdf.fit(x,cl_obs_arg).cdfs.cdf, cl_obs{cl_i}', 'UniformOutput',false));
+
+				cl_cdf{cl_i}=multi_cdf;
+				cl_cdf{cl_i}.cdfs.arg=cl_obs_arg{1};
+				cl_cdf{cl_i}.cdfs.cdf=median(files_cdf,2);
+			end
+
+			cdf_data{flist_i}=cl_cdf;
+			X_cur=cell(1,length(cl_cdf));
+			cl_obs=vertcat(cl_obs{:});
+			parfor cl_i=1:length(cl_cdf) % parfor
+				X_cur{cl_i} = parfor_cdfs_dist(cl_cdf(cl_i),cl_obs);
+			end
+			X{flist_i}=cell2mat(X_cur);
 		end
-
-		cdf_data{flist_i}=cl_cdf;
-		X_cur=cell(1,length(cl_cdf));
-		cl_obs=vertcat(cl_obs{:});
-		parfor cl_i=1:length(cl_cdf) % parfor
-			X_cur{cl_i} = parfor_cdfs_dist(cl_cdf(cl_i),cl_obs);
-		end
-		X{flist_i}=cell2mat(X_cur);
 
 		a = toc*((length(f_list)/flist_i)-1);
 		rem_str=sprintf('%d%%; %02d:%02d:%02d remaining...',fix(flist_i*100/length(f_list)), fix(a/3600), fix(rem(a,3600)/60), fix(rem(rem(a,3600),60)));
