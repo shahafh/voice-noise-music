@@ -8,7 +8,10 @@ function vnm_feature_select_graph(sfs_root)
 	
 	list=dir([sfs_root filesep 'Step*']);
 	list(not([list.isdir]))=[];
-	
+
+	[~,si] = sort(str2double(regexp({list.name}','(?<=Step)\d+','match','once')));
+	list = list(si);
+
 %	figure();
 	last_pt=[nan nan];
 	for li=1:length(list)
@@ -27,6 +30,10 @@ function last_pt=parse_subdir(last_pt, subroot)
 	list=list(si);
 	list={list.name};
 
+	fr_flag=not(cellfun(@isempty, regexp(list, '.*_forward\d+\.txt')));
+	bk_flag=not(cellfun(@isempty, regexp(list, '.*_backward\d+\.txt')));
+
+	list = [list(fr_flag) list(bk_flag)];
 	fr_flag=not(cellfun(@isempty, regexp(list, '.*_forward\d+\.txt')));
 	bk_flag=not(cellfun(@isempty, regexp(list, '.*_backward\d+\.txt')));
 
