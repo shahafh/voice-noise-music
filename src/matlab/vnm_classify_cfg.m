@@ -42,7 +42,7 @@
 
 %	alg.meta_obs=		struct('type','vad',	'params',struct( 'tone',true,	'result_min_sz',0.150) );
 
-	alg.meta_obs(end+1)=struct('type','split',	'params',struct( 'size',2.5,	'step',0.8) ); % 'last',10.0
+%	alg.meta_obs(end+1)=struct('type','split',	'params',struct( 'size',2.5,	'step',2.5) ); % 'last',10.0
 
 %	alg.meta_obs(end+1)=struct('type','intonogram','params',struct(	'obs',{{'power' 'pitch' 'lsf' 'lpcc' 'hos'}}, ... % 'teo'
 %												'win_sz',0.300,		'speech_sz',1.0,	'pause_sz',0.100) );
